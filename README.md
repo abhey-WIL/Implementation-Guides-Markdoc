@@ -16,9 +16,6 @@ The build process produces a single `index.md` file at the repo root. This is
 the canonical Beckn Implementation Guide document for this repository, and a
 GitHub Actions workflow keeps it up to date automatically.
 
-> Consumers of this repo should edit only the files under `src/`. Everything
-> outside `src/` is generated or infrastructure.
-
 ---
 
 ## Repository layout
@@ -32,41 +29,43 @@ index.md                  # BUILT: composed guide (auto-generated)
 .github/workflows/
   ev-docs-pages.yml       # GitHub Actions workflow that rebuilds index.md
 
-src/                      # All editable sources live here
+src/                      # Source for Beckn Implementation Guides
   build_markdoc_sections.py
   guides/
-    index.mdoc            # Markdoc entrypoint for EV Charging guide
+    index.mdoc            # Markdoc entrypoint for the EV Charging guide
   docs/
-    UserStories.md        # Local user stories and API examples (13.1, 13.2, ...)
+    UserStories.md        # EV user stories and API examples (13.1, 13.2, ...)
 ```
 
-### What you edit
+### Source modules
 
 - **`src/guides/index.mdoc`**
-  - Markdoc source that defines *which* sections to pull from upstream and how
-    to combine them with local content.
+  - Markdoc entrypoint that defines *which* sections are composed into the
+    Beckn Implementation Guide and in what order.
   - Uses custom tags:
-    - `remote-section src="..." id="..."` – pull a section by anchor id from a
-      remote Markdown document (e.g. the canonical EV_Charging.md).
-    - `local-section file="..." id="..."` – pull a section by anchor id from a
-      local Markdown file under `src/docs/`.
+    - `remote-section src="..." id="..."` – references a section by anchor id
+      from a remote Markdown Implementation Guide document (for example,
+      `EV_Charging.md`).
+    - `local-section file="..." id="..."` – references a section by anchor id
+      from a local Markdown file under `src/docs/`.
 
 - **`src/docs/UserStories.md`**
-  - Local content for the EV user stories and API examples (e.g. the 13.1 and
-    13.2 workflows).
-  - Contains `<span id="...">` anchors that match the `id="..."` values in
-    `local-section` tags, so the builder can extract the right slices.
+  - Local content for the EV user stories and API examples (for example,
+    the 13.1 and 13.2 workflows).
+  - Contains `<span id="...">` anchors that correspond to the `id="..."`
+    values used in `local-section` tags, allowing the builder to extract the
+    relevant slices.
 
 - **`src/build_markdoc_sections.py`**
   - Python script that:
     1. Reads `src/guides/index.mdoc`.
     2. Resolves each `remote-section` by fetching the remote Markdown and using
-       its TOC to extract the requested section.
+       its table of contents to locate the requested section.
     3. Resolves each `local-section` by reading the local file and extracting
        the section starting at the matching anchor.
-    4. Writes the final composed Markdown to `index.md` at the repo root.
+    4. Writes the final composed Markdown to `index.md` at the repository root.
 
-### What you do **not** edit
+### Generated artifacts and CI
 
 - `index.md` – generated output; overwritten by the builder.
 - `.github/workflows/ev-docs-pages.yml` – CI pipeline; usually changed only
@@ -117,7 +116,7 @@ The workflow in `.github/workflows/ev-docs-pages.yml` is wired to:
    the new file back to the repository.
 
 This ensures `index.md` is always in sync with the Markdoc sources (`src/`) on
-the `main` branch without maintainers having to run the builder manually.
+the `main` branch.
 
 ---
 
@@ -168,21 +167,23 @@ and publishing Beckn Implementation Guides for other networks.
 
 ---
 
-## Conventions and expectations for contributors
+## Structure and conventions
 
-- **Edit only under `src/`** unless you know you’re changing infrastructure.
-- Keep `remote-section` / `local-section` tags consistent:
-  - `src` / `file` should be valid URLs or paths relative to `src/`.
-  - `id` should match anchors defined in either:
-    - The upstream spec’s TOC (for remote sections), or
+- Source files for Beckn Implementation Guides are located under `src/`.
+- `remote-section` / `local-section` tags are expected to follow these
+  conventions:
+  - `src` / `file` values are URLs or paths relative to `src/`.
+  - `id` values correspond to anchors defined either in:
+    - The upstream Implementation Guide’s table of contents (for remote
+      sections), or
     - `<span id="...">` anchors in `src/docs/*.md` files (for local sections).
-- Run the builder locally before pushing if you want to confirm changes:
+- The builder can also be executed locally if required, via:
 
   ```bash
   python src/build_markdoc_sections.py src/guides/index.mdoc -o index.md
   ```
 
 This setup is intended to be **clonable and extensible**: teams can fork this
-repo, point `remote-section` tags at their own Beckn Implementation Guide
-documents, customize local user stories in `src/docs/`, and get an
+repository, point `remote-section` tags at their own Beckn Implementation
+Guide documents, add local user stories in `src/docs/`, and obtain an
 auto-generated Beckn Implementation Guide (`index.md`) with minimal effort.
