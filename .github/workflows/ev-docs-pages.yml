@@ -1,0 +1,49 @@
+name: Build Markdoc index
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'guides/**.mdoc'
+      - 'build_markdoc_sections.py'
+  workflow_dispatch: {}
+
+jobs:
+  build-index:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # so we can push back
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Build index.md from Markdoc
+        run: |
+          cd Markdoc
+          python build_markdoc_sections.py guides/index.mdoc -o index.md
+
+      - name: Commit and push changes (if any)
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          if ! git diff --quiet; then
+            git add Markdoc/index.md
+            git commit -m "chore: rebuild Markdoc index.md" || echo "No changes to commit"
+            git push
+          else
+            echo "No changes in index.md"
+          fi
