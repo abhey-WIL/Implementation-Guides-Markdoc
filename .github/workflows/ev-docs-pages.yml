@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'src/**'
+      - 'docs/build/**'
       - 'README.md'
       - '.github/workflows/ev-docs-pages.yml'
   workflow_dispatch: {}
@@ -33,7 +33,7 @@ jobs:
 
       - name: Build index.md from Markdoc
         run: |
-          python src/build_markdoc_sections.py src/guides/index.mdoc -o index.md
+          python docs/build/script.py docs/build/index.mdoc -o docs/index.md
 
       - name: Commit and push changes (if any)
         run: |
@@ -41,7 +41,7 @@ jobs:
           git config user.email "github-actions@github.com"
 
           if ! git diff --quiet; then
-            git add index.md
+            git add docs/index.md
             git commit -m "chore: rebuild Beckn Implementation Guide index" || echo "No changes to commit"
             git push
           else
